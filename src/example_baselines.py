@@ -5,8 +5,10 @@
 
 Run from the repository root:  python src/example_baselines.py
 """
+import numpy as np
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, r2_score, root_mean_squared_error
 
 from data import ROOT, START, TARGET, cv_splits, load_data, split_holdout
 from pipeline import build_pipeline, evaluate, results_table
@@ -20,8 +22,6 @@ pipe = build_pipeline(DummyRegressor(strategy="median"))
 rows.append({"model": "Median baseline", **evaluate(pipe, dev, splits)})
 
 # Baseline 2: end value = start value (no fitting needed)
-import numpy as np
-from sklearn.metrics import mean_absolute_error, r2_score, root_mean_squared_error
 scores = {"MAE": [], "RMSE": [], "R2": []}
 for _, val in splits:
     y, p = dev[TARGET].iloc[val], dev[START].iloc[val]
