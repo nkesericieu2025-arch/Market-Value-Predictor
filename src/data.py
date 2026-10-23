@@ -17,11 +17,12 @@ import pandas as pd
 from sklearn.model_selection import GroupKFold, GroupShuffleSplit, KFold
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA_PATH = ROOT / "data" / "Nisanov_final_data.xlsx"
-SEED = 42
+DATA_PATH = ROOT / "data" / "Nisanov_final_data.xlsx"             # how the code finds the data file on each computer
+SEED = 42.               
 
 TARGET = "value_end_mln"
 GROUP = "player_name"
+COMBINED_SHEET = "2019"
 
 NUMERIC = ["age_then", "height", "total_games", "total_minutes", "total_goals",
            "assists", "penalty_kicks", "club_performance", "relegation",
@@ -29,7 +30,7 @@ NUMERIC = ["age_then", "height", "total_games", "total_minutes", "total_goals",
 START = "value_0_mln"            # start-of-season value: used with AND without
 CATEGORICAL = ["position", "nationality", "club_name"]
 
-# Never used as predictors:
+# Never used as predictors (EXCLUDED):
 #   end_value, start_value       -> same values as target / value_0_mln, other units
 #   delta_value, value_delta_mln -> computed from the target (leakage)
 #   age_now                      -> measured after the season
@@ -40,7 +41,11 @@ EXCLUDED = ["end_value", "start_value", "delta_value", "value_delta_mln",
 
 def load_data():
     """All 1,382 player-season rows from the combined worksheet."""
-    return pd.read_excel(DATA_PATH, sheet_name="2019")
+    df = pd.read_excel(DATA_PATH, sheet_name=COMBINED_SHEET)
+    assert len(df) == 1382, f"expected 1382 rows, got {len(df)}"
+    assert sorted(df["season"].unique()) == [2019, 2020, 2021, 2022, 2023]
+    return df
+
 
 
 def split_holdout(df, test_size=0.2):
