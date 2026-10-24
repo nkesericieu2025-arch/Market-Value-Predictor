@@ -18,7 +18,7 @@ from sklearn.model_selection import GroupKFold, GroupShuffleSplit, KFold
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT / "data" / "Nisanov_final_data.xlsx"             # how the code finds the data file on each computer
-SEED = 42.               
+SEED = 42               
 
 TARGET = "value_end_mln"
 GROUP = "player_name"
