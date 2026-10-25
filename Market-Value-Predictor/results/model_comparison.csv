@@ -1,0 +1,12 @@
+model,use_start,cv,n_dev,MAE_mean,MAE_std,RMSE_mean,RMSE_std,R2_mean,R2_std
+Median baseline,False,shuffled-GroupKFold-5,1102,16.617,3.565,24.022,6.259,-0.107,0.105
+Linear Regression,False,shuffled-GroupKFold-5,1102,10.888,1.154,14.757,1.927,0.551,0.099
+Ridge (alpha=1),False,shuffled-GroupKFold-5,1102,10.812,1.169,14.678,1.985,0.557,0.094
+Ridge (alpha=10),False,shuffled-GroupKFold-5,1102,10.62,1.235,14.549,2.197,0.569,0.078
+Random Forest (depth=8),False,shuffled-GroupKFold-5,1102,10.849,1.631,15.336,2.885,0.531,0.064
+Random Forest (unlimited depth),False,shuffled-GroupKFold-5,1102,10.377,1.609,14.916,2.891,0.557,0.056
+Linear Regression,True,shuffled-GroupKFold-5,1102,5.241,0.58,7.535,1.285,0.883,0.03
+Ridge (alpha=1),True,shuffled-GroupKFold-5,1102,5.199,0.585,7.502,1.293,0.884,0.03
+Ridge (alpha=10),True,shuffled-GroupKFold-5,1102,5.047,0.579,7.389,1.301,0.887,0.03
+Random Forest (depth=8),True,shuffled-GroupKFold-5,1102,4.862,0.945,8.051,1.91,0.872,0.023
+Random Forest (unlimited depth),True,shuffled-GroupKFold-5,1102,4.853,0.95,8.038,1.911,0.873,0.024

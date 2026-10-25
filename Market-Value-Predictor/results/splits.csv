@@ -1,0 +1,4 @@
+kind,n_folds,n_dev,overlap_players_mean,overlap_val_rows_mean,train_rows_min,validation_rows_min,MAE_mean,MAE_std,RMSE_mean,RMSE_std,R2_mean,R2_std
+group,5,1102,0.0,0.0,864,209,10.62,1.235,14.549,2.197,0.569,0.078
+random,5,1102,136.0,162.8,881,220,10.278,0.731,14.049,1.329,0.649,0.02
+chronological,4,1102,144.75,144.75,212,210,10.393,1.071,14.335,1.891,0.633,0.039
