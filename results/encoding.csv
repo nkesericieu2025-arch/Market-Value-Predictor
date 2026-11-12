@@ -1,0 +1,7 @@
+model,encoding,n_folds,n_dev,MAE_mean,MAE_std,RMSE_mean,RMSE_std,R2_mean,R2_std
+Ridge alpha=10,onehot,5,1102,10.636,1.188,14.549,2.149,0.568,0.084
+Ridge alpha=10,grouped,5,1102,10.62,1.235,14.549,2.197,0.569,0.078
+Ridge alpha=10,drop,5,1102,12.366,1.465,16.703,2.466,0.432,0.103
+Random Forest depth=8,onehot,5,1102,10.846,1.612,15.331,2.847,0.53,0.064
+Random Forest depth=8,grouped,5,1102,10.849,1.631,15.336,2.885,0.531,0.064
+Random Forest depth=8,drop,5,1102,12.288,1.562,17.026,2.882,0.417,0.082
