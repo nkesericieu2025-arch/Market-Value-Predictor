@@ -1,0 +1,23 @@
+Model,Feature,MAE_Increase_When_Shuffled
+Ridge,age_then,2.022440728971495
+Ridge,position,0.8255320647752564
+Ridge,nationality,0.49368103077130226
+Ridge,height,0.29128780394761355
+Ridge,total_games,1.5543145140711692
+Ridge,total_minutes,1.2902231663989379
+Ridge,total_goals,2.146472596981204
+Ridge,assists,0.6612927452486606
+Ridge,penalty_kicks,0.11087446211205787
+Ridge,xG,0.2784294092483126
+Ridge,xA,1.0406176809841052
+Shallow Boosting,age_then,3.02280912408285
+Shallow Boosting,position,0.6288786561959242
+Shallow Boosting,nationality,0.3745818242070527
+Shallow Boosting,height,0.7811719688201928
+Shallow Boosting,total_games,0.9575767457951916
+Shallow Boosting,total_minutes,0.9237838509596985
+Shallow Boosting,total_goals,1.7614359990579906
+Shallow Boosting,assists,0.6142817938711115
+Shallow Boosting,penalty_kicks,-0.04625172354389147
+Shallow Boosting,xG,0.2684922070386744
+Shallow Boosting,xA,1.111542278507543
