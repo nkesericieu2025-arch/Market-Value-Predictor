@@ -174,3 +174,37 @@ report/    LaTeX source of the reports
 Parts of the code were drafted with generative AI (Claude, Anthropic) and reviewed by
 the team. Each submission's declaration lists which files, what was changed and how
 it was verified.
+
+## Final SCOUT results
+
+The project compares football player market-value prediction methods using player characteristics and performance statistics.
+
+### Performance-only prediction
+
+The final comparison uses 2023 as the held-out test season, excluding starting market value from the predictors.
+
+| Model | MAE | RMSE | R² |
+|---|---:|---:|---:|
+| Tuned Gradient Boosting | 12.753 | 17.851 | 0.531 |
+| Ridge Regression | 13.005 | 18.664 | 0.514 |
+| Random Forest | 13.061 | 19.169 | 0.488 |
+
+Tuned Gradient Boosting performed best among these three models.
+
+Earlier experiments including starting market value achieved higher R² scores, but represent a different prediction setting and are not directly comparable.
+
+### Reproducibility
+
+- `src/`: model implementations and experiments
+- `data/`: original and processed datasets
+- `results/scout/`: model comparisons and diagnostics
+- `figures/scout/`: visualizations
+- `results/scout/final_three_model_comparison.csv`: final model metrics
+
+### Limitations
+
+The dataset is relatively small and may not represent all football players. Some players appear across multiple seasons. Market-value units and the timing of predictors require source verification. Model feature importance does not establish causality.
+
+### Project status
+
+The modeling experiments, evaluation, and visualizations are complete. The team's separate 12-page academic report will present and interpret the findings.
