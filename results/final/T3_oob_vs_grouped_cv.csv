@@ -1,3 +1,3 @@
 estimate,MAE,RMSE,R2,rows_from_players_with_several_seasons
-Out-of-bag (rows resampled),9.301,13.421,0.682,0.791
-Grouped 5-fold CV (players held out),10.523,15.146,0.519,0.791
+Out-of-bag (rows resampled),9.307,13.402,0.683,0.791
+Grouped 5-fold CV (players held out),10.524,15.145,0.52,0.791

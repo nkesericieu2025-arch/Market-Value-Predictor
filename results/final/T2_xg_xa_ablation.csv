@@ -1,7 +1,7 @@
 model,features,MAE_mean,MAE_sd,RMSE_mean,RMSE_sd,R2_mean,R2_sd
 Ridge,without xG/xA,10.62,1.235,14.548,2.197,0.569,0.078
 Ridge,with xG/xA,10.665,0.93,14.497,1.874,0.563,0.113
-Random forest,without xG/xA,10.168,1.478,14.655,2.598,0.569,0.064
-Random forest,with xG/xA,10.523,0.934,15.146,1.834,0.519,0.14
+Random forest,without xG/xA,10.248,1.599,14.777,2.775,0.564,0.059
+Random forest,with xG/xA,10.524,0.936,15.145,1.838,0.52,0.14
 Gradient boosting,without xG/xA,9.757,1.437,13.876,2.341,0.61,0.071
 Gradient boosting,with xG/xA,9.662,1.224,13.689,2.057,0.613,0.099

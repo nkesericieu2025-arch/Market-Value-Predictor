@@ -1,7 +1,7 @@
 model,target,MAE_mean,MAE_sd,RMSE_mean,RMSE_sd,R2_mean,R2_sd
 Ridge,original,10.665,0.93,14.497,1.874,0.563,0.113
 Ridge,log1p,9.915,1.714,15.312,3.782,0.525,0.14
-Random forest,original,10.523,0.934,15.146,1.834,0.519,0.14
-Random forest,log1p,10.418,1.949,15.776,3.322,0.512,0.03
+Random forest,original,10.524,0.936,15.145,1.838,0.52,0.14
+Random forest,log1p,10.418,1.966,15.774,3.337,0.512,0.028
 Gradient boosting,original,9.662,1.224,13.689,2.057,0.613,0.099
 Gradient boosting,log1p,8.856,1.653,13.05,2.548,0.66,0.052

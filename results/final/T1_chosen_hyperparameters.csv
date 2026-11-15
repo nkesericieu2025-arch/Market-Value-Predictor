@@ -32,7 +32,7 @@ Ridge,True,5,30.0,,,,,
 Random forest,True,1,,1.0,1.0,,,
 Random forest,True,2,,1.0,1.0,,,
 Random forest,True,3,,1.0,1.0,,,
-Random forest,True,4,,1.0,3.0,,,
+Random forest,True,4,,1.0,1.0,,,
 Random forest,True,5,,1.0,1.0,,,
 Gradient boosting,True,1,,,10.0,300.0,0.03,7.0
 Gradient boosting,True,2,,,10.0,300.0,0.03,15.0
