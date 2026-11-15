@@ -1,0 +1,5 @@
+model,design,growth_rate_mean_over_folds,rows_without_start_value,MAE_mean,RMSE_mean,R2_mean,MAE_std,RMSE_std,R2_std
+Start value x (1 + mean growth),grouped 5-fold CV,0.2,8,8.623,12.65,0.678,1.804,2.977,0.079
+Start value x (1 + median growth),grouped 5-fold CV,-0.02,8,5.493,8.827,0.84,1.013,1.846,0.046
+Start value x (1 + mean growth),"train 2019-2021, validate 2022",0.061,0,7.242,10.39,0.817,,,
+Start value x (1 + median growth),"train 2019-2021, validate 2022",-0.1,0,7.344,11.217,0.787,,,

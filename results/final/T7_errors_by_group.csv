@@ -1,0 +1,15 @@
+group,n,MAE,median_value,by
+Defender,340,8.141,15.5,position_group
+Forward/Winger,414,10.447,20.0,position_group
+Midfielder,347,10.249,20.0,position_group
+Other,1,23.692,60.0,position_group
+<=5,168,5.083,3.0,value_band
+5-15,283,7.338,10.0,value_band
+15-30,327,7.412,20.0,value_band
+30-60,228,12.382,40.25,value_band
+>60,96,25.994,75.0,value_band
+2019,212,10.118,16.0,season
+2020,214,9.315,18.0,season
+2021,221,8.515,18.0,season
+2022,210,9.793,21.0,season
+2023,245,10.596,20.0,season

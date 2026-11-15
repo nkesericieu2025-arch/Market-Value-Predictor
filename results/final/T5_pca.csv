@@ -1,0 +1,3 @@
+model,numeric_inputs,MAE_mean,MAE_sd,RMSE_mean,RMSE_sd,R2_mean,R2_sd
+Ridge,12 original variables,10.665,0.93,14.497,1.874,0.563,0.113
+Ridge,7 PCA components (90% variance),10.635,0.987,14.592,1.875,0.556,0.119
