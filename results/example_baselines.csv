@@ -1,5 +1,5 @@
 model,MAE_mean,MAE_std,RMSE_mean,RMSE_std,R2_mean,R2_std
-Median baseline,16.56,3.437,24.092,5.731,-0.105,0.097
-Start value carried forward,5.481,0.852,8.994,1.348,0.838,0.03
-Linear regression (start value: False),10.75,1.06,14.605,1.749,0.565,0.099
-Linear regression (start value: True),5.145,0.603,7.453,1.243,0.89,0.019
+Median baseline,16.617,3.565,24.022,6.259,-0.107,0.105
+Start value carried forward (train-median fallback),5.492,1.01,8.89,1.894,0.84,0.042
+Linear regression (start value: False),10.888,1.154,14.757,1.927,0.551,0.099
+Linear regression (start value: True),5.241,0.58,7.535,1.285,0.883,0.03

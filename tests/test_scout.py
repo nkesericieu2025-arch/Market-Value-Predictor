@@ -21,12 +21,15 @@ class DataProtocolTests(unittest.TestCase):
 
     def test_recover_missingness_without_editing_raw_workbook(self):
         self.assertEqual(len(self.data), 1382)
-        self.assertEqual(int(self.data[START].isna().sum()), 0)
-        self.assertEqual(int(self.data[TARGET].isna().sum()), 0)
+        # 10 start values and 1 end value are empty in the raw columns; the *_mln
+        # columns store them as 0, so load_data() must restore them as missing.
+        self.assertEqual(int(self.data[START].isna().sum()), 10)
+        self.assertEqual(int(self.data[TARGET].isna().sum()), 1)
         self.assertFalse(self.data.duplicated([GROUP, "season"]).any())
 
     def test_disjoint_player_holdout(self):
-        self.assertEqual(len(self.dev) + len(self.holdout), len(self.data))
+        # The one row with an unknown target is dropped after the player split.
+        self.assertEqual(len(self.dev) + len(self.holdout), len(self.data) - 1)
         self.assertFalse(self.dev[TARGET].isna().any())
         self.assertFalse(self.holdout[TARGET].isna().any())
         self.assertFalse(set(self.dev[GROUP]) & set(self.holdout[GROUP]))

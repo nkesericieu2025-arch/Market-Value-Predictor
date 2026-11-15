@@ -1,14 +1,12 @@
-"""Shared data loading and splitting for SCOUT.
+"""Shared SCOUT dataset and RANDOM, player-grouped evaluation splits.
 
-Everyone imports from here, so the whole team uses the same rows,
-the same features, the same held-out test players and the same folds.
+The combined '2019' sheet holds observations from 2019-2023. Our prediction
+is end-of-season estimated market value using information available by the
+end of that season; it is NOT a pre-season forecast.
 
-Key decisions (see README):
-- Only the worksheet named "2019" is used: it already combines 2019-2023.
-- 20% of PLAYERS are held out as a final test set and are not touched
-  until the final report (all experiments use the remaining "dev" set).
-- Cross-validation is grouped by player, so one player's seasons never
-  appear in both the training and the validation fold.
+Primary evaluation: GroupShuffleSplit for development/holdout, then shuffled
+GroupKFold for CV within development. These splits are random across seasons
+but keep *all seasons of each player together*.
 """
 from pathlib import Path
 
@@ -17,53 +15,70 @@ import pandas as pd
 from sklearn.model_selection import GroupKFold, GroupShuffleSplit, KFold
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA_PATH = ROOT / "data" / "Nisanov_final_data.xlsx"             # how the code finds the data file on each computer
-SEED = 42               
-
+DATA_PATH = ROOT / "data" / "Nisanov_final_data.xlsx"
+SEED = 42
 TARGET = "value_end_mln"
 GROUP = "player_name"
 COMBINED_SHEET = "2019"
-
 NUMERIC = ["age_then", "height", "total_games", "total_minutes", "total_goals",
            "assists", "penalty_kicks", "club_performance", "relegation",
            "success_or_not"]
-START = "value_0_mln"            # start-of-season value: used with AND without
+START = "value_0_mln"
 CATEGORICAL = ["position", "nationality", "club_name"]
-
-# Never used as predictors (EXCLUDED):
-#   end_value, start_value       -> same values as target / value_0_mln, other units
-#   delta_value, value_delta_mln -> computed from the target (leakage)
-#   age_now                      -> measured after the season
-#   player_name                  -> identifier (used only for grouping)
 EXCLUDED = ["end_value", "start_value", "delta_value", "value_delta_mln",
-            "age_now", "player_name"]
+            "age_now", "player_name", "season"]
 
 
 def load_data():
-    """All 1,382 player-season rows from the combined worksheet."""
+    """Read all 1,382 source observations and restore missingness.
+
+    The dataset's *_mln numeric columns misleadingly substitute zero when the
+    corresponding raw value is empty. Recover missingness from the raw columns:
+      * 10 missing 'start_value' -> NaN in START (imputed inside CV folds).
+      * 1 missing 'end_value' -> unobserved TARGET; excluded from CV after
+        generating the holdout on the ORIGINAL player list to preserve groups.
+    Do NOT change genuine zero values where their raw source is zero.
+    """
     df = pd.read_excel(DATA_PATH, sheet_name=COMBINED_SHEET)
-    assert len(df) == 1382, f"expected 1382 rows, got {len(df)}"
-    assert sorted(df["season"].unique()) == [2019, 2020, 2021, 2022, 2023]
+    if len(df) != 1382 or sorted(df["season"].unique()) != [2019, 2020, 2021, 2022, 2023]:
+        raise ValueError("Unexpected source dataset size or season coverage")
+    if df.duplicated([GROUP, "season"]).any():
+        raise ValueError("Duplicate player-season rows")
+    if not np.allclose(df.loc[df['start_value'].notna(), 'start_value'] / 1e6,
+                       df.loc[df['start_value'].notna(), START]):
+        raise ValueError("Starting value columns disagree")
+    if not np.allclose(df.loc[df['end_value'].notna(), 'end_value'] / 1e6,
+                       df.loc[df['end_value'].notna(), TARGET]):
+        raise ValueError("Target value columns disagree")
+
+    df = df.copy()
+    df.loc[df["start_value"].isna(), START] = np.nan
+    df.loc[df["end_value"].isna(), TARGET] = np.nan
     return df
 
 
-
 def split_holdout(df, test_size=0.2):
-    """Return (dev, test). Test = ~20% of players, all their seasons.
+    """Split players at random, independently of season; return dev, holdout.
 
-    DO NOT evaluate anything on `test` before the final model is chosen.
+    Historical warning: the earlier chronological analysis evaluated 2023,
+    which overlaps part of this holdout. Avoid describing it as fully unseen.
+    Do not use holdout for today's model/feature selection.
     """
     gss = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=SEED)
-    dev_idx, test_idx = next(gss.split(df, groups=df[GROUP]))
-    return df.iloc[dev_idx].reset_index(drop=True), df.iloc[test_idx].reset_index(drop=True)
+    dev_idx, hold_idx = next(gss.split(df, groups=df[GROUP]))
+    # Group assignment is fixed before removing the one invalid TARGET row,
+    # so missing-target correction does not reshuffle the reserved players.
+    dev = df.iloc[dev_idx].dropna(subset=[TARGET]).reset_index(drop=True)
+    holdout = df.iloc[hold_idx].dropna(subset=[TARGET]).reset_index(drop=True)
+    return dev, holdout
 
 
 def cv_splits(dev, kind="group", n_splits=5):
-    """List of (train_idx, val_idx) pairs on the dev set.
+    """Folds on development rows only.
 
-    kind="group"         main design: random folds, players kept together
-    kind="random"        plain KFold (players can leak across folds)
-    kind="chronological" train on earlier seasons, validate on the next one
+    group: primary RANDOM 5-fold CV by player, irrespective of season.
+    random: diagnostic only; ordinary shuffled rows can repeat players across folds.
+    chronological: historical robustness diagnostic, not primary evaluation.
     """
     if kind == "group":
         cv = GroupKFold(n_splits=n_splits, shuffle=True, random_state=SEED)
@@ -72,20 +87,23 @@ def cv_splits(dev, kind="group", n_splits=5):
         cv = KFold(n_splits=n_splits, shuffle=True, random_state=SEED)
         return list(cv.split(dev))
     if kind == "chronological":
-        seasons = sorted(dev["season"].unique())
+        years = sorted(dev["season"].unique())
         return [(np.where(dev["season"] < s)[0], np.where(dev["season"] == s)[0])
-                for s in seasons[1:]]
-    raise ValueError(f"unknown kind: {kind}")
+                for s in years[1:]]
+    raise ValueError(f"Unknown split type: {kind}")
 
 
 if __name__ == "__main__":
-    # Smoke test: python src/data.py
     df = load_data()
-    dev, test = split_holdout(df)
-    print(f"all rows: {len(df)} | dev: {len(dev)} rows, {dev[GROUP].nunique()} players"
-          f" | test: {len(test)} rows, {test[GROUP].nunique()} players")
-    assert not set(dev[GROUP]) & set(test[GROUP]), "player in both dev and test!"
-    for kind in ["group", "random", "chronological"]:
-        sizes = [len(v) for _, v in cv_splits(dev, kind)]
-        print(f"{kind:>13} folds, validation sizes: {sizes}")
+    dev, holdout = split_holdout(df)
+    print("SCOUT dataset: source=", len(df), "; modeling=", len(dev)+len(holdout))
+    print("Dev rows/players:", len(dev), dev[GROUP].nunique())
+    print("Reserved holdout rows/players:", len(holdout), holdout[GROUP].nunique())
+    assert not set(dev[GROUP]) & set(holdout[GROUP])
+    for kind in ("group", "random", "chronological"):
+        folds = cv_splits(dev, kind)
+        print(kind, 'validation sizes:', [len(v) for _, v in folds])
+        if kind == "group":
+            assert all(not set(dev.iloc[t][GROUP]) & set(dev.iloc[v][GROUP]) for t,v in folds)
+    print("Missing start values on model rows:", int(dev[START].isna().sum()+holdout[START].isna().sum()))
     print("OK")

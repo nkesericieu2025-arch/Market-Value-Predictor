@@ -1,9 +1,6 @@
-"""Worked example showing the pattern every experiment script follows.
+"""Reproducible baseline results from DEVELOPMENT folds only.
 
-1. load data, 2. take the dev set, 3. get folds, 4. build pipeline(s),
-5. evaluate, 6. save a CSV in results/.
-
-Run from the repository root:  python src/example_baselines.py
+Run from project root: python src/example_baselines.py
 """
 import numpy as np
 from sklearn.dummy import DummyRegressor
@@ -13,32 +10,37 @@ from sklearn.metrics import mean_absolute_error, r2_score, root_mean_squared_err
 from data import ROOT, START, TARGET, cv_splits, load_data, split_holdout
 from pipeline import build_pipeline, evaluate, results_table
 
-dev, _ = split_holdout(load_data())          # never use the test part here
-splits = cv_splits(dev, kind="group")
 
-rows = []
-# Baseline 1: predict the training median for everyone
-pipe = build_pipeline(DummyRegressor(strategy="median"))
-rows.append({"model": "Median baseline", **evaluate(pipe, dev, splits)})
+def main():
+    dev, _holdout = split_holdout(load_data())
+    splits = cv_splits(dev, kind="group")
+    rows = [{"model": "Median baseline", **evaluate(
+        build_pipeline(DummyRegressor(strategy="median")), dev, splits)}]
 
-# Baseline 2: end value = start value (no fitting needed)
-scores = {"MAE": [], "RMSE": [], "R2": []}
-for _, val in splits:
-    y, p = dev[TARGET].iloc[val], dev[START].iloc[val]
-    scores["MAE"].append(mean_absolute_error(y, p))
-    scores["RMSE"].append(root_mean_squared_error(y, p))
-    scores["R2"].append(r2_score(y, p))
-rows.append({"model": "Start value carried forward",
-             **{f"{k}_{s}": getattr(np, s)(v) for k, v in scores.items()
-                for s in ("mean", "std")}})
+    # End value = start value. The 10 unknown starting values have been restored
+    # to NaN; impute them with TRAINING-FOLD start-value median for fair scoring.
+    scores = {"MAE": [], "RMSE": [], "R2": []}
+    for train_idx, val_idx in splits:
+        fallback = dev[START].iloc[train_idx].median()
+        y = dev[TARGET].iloc[val_idx]
+        pred = dev[START].iloc[val_idx].fillna(fallback)
+        scores["MAE"].append(mean_absolute_error(y, pred))
+        scores["RMSE"].append(root_mean_squared_error(y, pred))
+        scores["R2"].append(r2_score(y, pred))
+    rows.append({"model": "Start value carried forward (train-median fallback)",
+                 **{f"{metric}_{s}": getattr(np, s)(values)
+                    for metric, values in scores.items() for s in ("mean", "std")}})
 
-# First real model: linear regression, without and with the start value
-for use_start in (False, True):
-    pipe = build_pipeline(LinearRegression(), use_start=use_start)
-    rows.append({"model": f"Linear regression (start value: {use_start})",
-                 **evaluate(pipe, dev, splits, use_start=use_start)})
+    for use_start in (False, True):
+        rows.append({"model": f"Linear regression (start value: {use_start})",
+                     **evaluate(build_pipeline(LinearRegression(), use_start=use_start),
+                                dev, splits, use_start=use_start)})
 
-table = results_table(rows)
-print(table.to_string(index=False))
-(ROOT / "results").mkdir(exist_ok=True)
-table.to_csv(ROOT / "results" / "example_baselines.csv", index=False)
+    table = results_table(rows)
+    (ROOT / 'results').mkdir(exist_ok=True)
+    table.to_csv(ROOT / "results" / "example_baselines.csv", index=False)
+    print(table.to_string(index=False))
+
+
+if __name__ == "__main__":
+    main()
