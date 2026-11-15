@@ -23,6 +23,17 @@ doi:10.17632/3btg6ptc7b.2, CC BY 4.0. Stored in `data/` unmodified.
 Only the worksheet named `2019` is used: it already combines all 2019–2023 seasons
 (1,382 rows, 656 players). The other sheets would duplicate rows.
 
+Expected goals and assists (xG, xA) come from Understat (https://understat.com) via the
+public export `understat_players_aggregated_2014_2024.csv` from
+https://github.com/vibedatascience/understat_players_aggregated, stored unmodified in
+`data/external/`. That repository states no licence: it is credited here, and the team
+will confirm redistribution is allowed before the final report.
+`src/integrate_understat.py` matches it to our data by normalised player name and season
+(93.6% of rows matched; goal counts agree in 99.7% of matched rows).
+
+Ten start values and one end value are empty in the raw columns but stored as 0 in the
+`*_mln` columns; `load_data()` restores them as missing, leaving 1,381 usable rows.
+
 Columns we never use as predictors (see `EXCLUDED` in `src/data.py`):
 | Column | Why excluded |
 |---|---|
@@ -59,9 +70,9 @@ If either fails, do not start working: post the full error in the group chat.
 | `ROOT`, `DATA_PATH` | Finds the data file relative to the code | Works on every laptop without changing paths |
 | `COMBINED_SHEET` | The sheet named `2019`, which actually holds all 2019–2023 rows | The season sheets 2020–2023 lack the three club variables, so they are not used |
 | `NUMERIC`, `START`, `CATEGORICAL`, `EXCLUDED` | Which columns are predictors and which are never used | Keeps leakage columns out for everyone |
-| `load_data()` | Reads the combined sheet and checks it has 1,382 rows and seasons 2019–2023 | Stops immediately if the wrong data is loaded |
+| `load_data()` | Reads the combined sheet, checks 1,382 rows and seasons 2019–2023, and restores the 11 values stored as 0 as missing | Stops immediately if the wrong data is loaded |
 | `split_holdout()` | Locks away 20% of *players* (all their seasons) as the final test set, with seed 42 | Same 132 test players for everyone; **never used before the final report** |
-| `cv_splits(dev, kind)` | Cuts the remaining 1,103 rows into folds | `"group"`: main design, random across seasons, players kept together. `"random"` and `"chronological"`: only for the split experiment |
+| `cv_splits(dev, kind)` | Cuts the remaining 1,102 rows (523 players) into folds | `"group"`: main design, random across seasons, players kept together. `"random"` and `"chronological"`: only for the split experiment |
 | `if __name__ == "__main__":` | Smoke test: prints sizes, checks no player is in both dev and test, builds all fold types | Run `python src/data.py` after every `git pull` |
 
 **`src/pipeline.py`: preparation + model as one unit**
@@ -133,25 +144,29 @@ git push -u origin <name>/<task>          # then open a Pull Request on GitHub
   misses more) and R² (share of the variation in values the model explains).
 - Random seed: 42 everywhere.
 
-## Models (progress report)
+## Models
 | Model | Role |
 |---|---|
-| Median baseline | Predicts the same typical value for everyone; any model must beat it |
-| Start value carried forward | Predicts "value stays what it was at the start of the season" |
+| Median baseline | Same typical value for everyone; any model must beat it |
+| Start value carried forward | "Value stays what it was at the start of the season" |
+| Start value × (1 + mean / median growth) | Start value grown by the average growth rate of the training players |
 | Linear regression | First real model |
-| Ridge regression | Linear regression with a penalty that keeps coefficients small; tests whether this helps with many correlated or sparse columns |
+| Ridge regression | Linear regression with a penalty that keeps coefficients small |
+| Random forest | Many decision trees on bootstrap samples; tuned with out-of-bag (OOB) error |
+| Gradient boosting | Trees added one after another, each correcting the previous ones |
 
 Every model is run **with and without** the start-of-season value (`value_0_mln`),
-to separate what performance data explain on their own from what the market already
-knew. Random forest is planned after it is covered in the course.
+to separate what performance data explain on their own from what the market already knew.
 
-## Experiments for the progress report
-| Script | Question it answers | Output | Owner |
-|---|---|---|---|
-| `src/example_baselines.py` | Template showing the pattern every script follows | `results/example_baselines.csv` | shared |
-| `src/exp_models.py` | Which model predicts best, and what does the start value add? | `results/models.csv` | Person B |
-| `src/exp_encoding.py` | Do the many sparse columns from nationality/club hurt the models? | `results/encoding.csv`, `figures/encoding.png` | Person C |
-| `src/exp_splits.py` | Does the way we split the data change the results (leakage, year effects)? | `results/splits.csv`, `results/by_season.csv` | Person A |
+## Scripts and what they produce
+| Script | Purpose | Output |
+|---|---|---|
+| `src/final_analysis.py` | **Main analysis**: every result in the sentence outline (grouped CV, nested tuning, xG/xA, log target, PCA, feature importance, errors by group, case study). ~8 min | `results/final/T1–T8*.csv`, `figures/final/F1–F4*.png` |
+| `src/exp_growth_baseline.py` | Percentage-growth baseline | `results/growth_baseline.csv` |
+| `src/integrate_understat.py` | Merges xG/xA into the player data | `data/processed/scout_with_understat.csv` |
+| `src/model_comparison.py`, `src/exp_encoding.py`, `src/exp_splits.py`, `src/plot_results.py` | Progress-report experiments (25 October) | `results/*.csv`, `figures/progress_*.png` |
+| `src/scout_analysis.py`, `src/exp_*boosting*.py`, `src/exp_log_target.py`, `src/exp_weighted_ridge.py`, `src/exp_engineered_features.py`, `src/compare_xg_xa*.py`, `src/feature_importance_xg.py` | Earlier experiments on a chronological split (train 2019–2021, validate 2022, test 2023); kept as a **robustness check**, not as main results | `results/scout/`, `figures/scout/` |
+| `tests/test_scout.py` | Checks data loading, missing values and that no player is in both development and reserve | run `python -m unittest discover -s tests -v` |
 
 **Encoding options** (`encoding=` in `build_pipeline`): `onehot` gives every
 nationality and club its own 0/1 column; `grouped` merges categories with fewer than
@@ -161,50 +176,46 @@ nationality and club its own 0/1 column; `grouped` merges categories with fewer 
 together), `random` (players can appear on both sides), `chronological` (train on
 earlier seasons, test on the next one).
 
+## Current results (development players, grouped 5-fold CV)
+From `results/final/T1_model_comparison.csv`. MAE and RMSE in millions (currency to be
+confirmed), mean ± SD over five folds. **The 132 reserved players have not been evaluated.**
+
+| Model | Start value | MAE | RMSE | R² |
+|---|:---:|---:|---:|---:|
+| Median baseline | no | 16.62 ± 3.57 | 24.02 | −0.11 |
+| Linear regression | no | 10.83 ± 0.90 | 14.67 | 0.55 |
+| Ridge | no | 10.67 ± 0.93 | 14.50 | 0.56 |
+| Random forest | no | 10.52 ± 0.94 | 15.15 | 0.52 |
+| **Gradient boosting** | no | **9.66 ± 1.22** | **13.69** | **0.61** |
+| Start value carried forward | yes | 5.49 ± 1.01 | 8.89 | 0.84 |
+| Ridge | yes | 5.00 ± 0.56 | 7.35 | 0.89 |
+| Random forest | yes | 4.95 ± 0.94 | 8.18 | 0.87 |
+| **Gradient boosting** | yes | **4.78 ± 0.86** | 7.84 | 0.88 |
+
+- Season data alone explain about 60% of the variance; the start-of-season value is the
+  strongest single predictor.
+- Club and age matter most (`T6_feature_importance.csv`); nationality adds almost nothing.
+- xG/xA, PCA and a log target do not change these conclusions (`T2`, `T4`, `T5`).
+- Random-forest OOB error (9.31) is more optimistic than grouped CV (10.52), because most
+  players appear in several seasons (`T3`).
+
+The final evaluation on the reserved players will be run once, after the team agrees on
+the final model.
+
 ## Structure
 ```
-data/      raw data (never edited by hand)
-src/       data.py, pipeline.py (shared, change only by agreement) + experiment scripts
-results/   CSV outputs written by scripts
-figures/   figures written by scripts
-report/    LaTeX source of the reports
+data/            Nisanov dataset (never edited by hand)
+data/external/   Understat xG/xA export (unmodified)
+data/processed/  merged data written by src/integrate_understat.py
+src/             shared code (data.py, pipeline.py: change only by agreement) + experiments
+tests/           automated checks
+results/final/   main results (src/final_analysis.py)
+results/         progress-report results; results/scout/: chronological robustness check
+figures/final/   figures for the outline and report; figures/scout/: robustness figures
+report/          LaTeX sources (sentence outline, bibliography)
 ```
 
 ## AI use
 Parts of the code were drafted with generative AI (Claude, Anthropic) and reviewed by
 the team. Each submission's declaration lists which files, what was changed and how
 it was verified.
-
-## Final SCOUT results
-
-The project compares football player market-value prediction methods using player characteristics and performance statistics.
-
-### Performance-only prediction
-
-The final comparison uses 2023 as the held-out test season, excluding starting market value from the predictors.
-
-| Model | MAE | RMSE | R² |
-|---|---:|---:|---:|
-| Tuned Gradient Boosting | 12.753 | 17.851 | 0.531 |
-| Ridge Regression | 13.005 | 18.664 | 0.514 |
-| Random Forest | 13.061 | 19.169 | 0.488 |
-
-Tuned Gradient Boosting performed best among these three models.
-
-Earlier experiments including starting market value achieved higher R² scores, but represent a different prediction setting and are not directly comparable.
-
-### Reproducibility
-
-- `src/`: model implementations and experiments
-- `data/`: original and processed datasets
-- `results/scout/`: model comparisons and diagnostics
-- `figures/scout/`: visualizations
-- `results/scout/final_three_model_comparison.csv`: final model metrics
-
-### Limitations
-
-The dataset is relatively small and may not represent all football players. Some players appear across multiple seasons. Market-value units and the timing of predictors require source verification. Model feature importance does not establish causality.
-
-### Project status
-
-The modeling experiments, evaluation, and visualizations are complete. The team's separate 12-page academic report will present and interpret the findings.

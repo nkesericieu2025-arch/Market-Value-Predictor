@@ -1,0 +1,16 @@
+variable,Ridge,Random forest,Gradient boosting,RF impurity share
+club_name,3.498,2.359,3.653,0.159
+age_then,2.219,2.946,3.385,0.113
+total_goals,2.177,1.084,1.492,0.119
+total_minutes,0.748,1.126,1.256,0.064
+xA,0.581,1.564,0.876,0.269
+relegation,0.229,0.616,0.482,0.024
+assists,0.42,0.389,0.315,0.036
+height,0.167,0.112,0.251,0.044
+club_performance,0.432,0.088,0.201,0.02
+total_games,0.1,0.311,0.183,0.028
+xG,-0.039,0.117,0.165,0.05
+position,0.501,0.097,0.12,0.024
+nationality,0.012,0.088,0.066,0.037
+penalty_kicks,0.006,0.01,0.012,0.011
+success_or_not,0.496,0.013,0.002,0.003
