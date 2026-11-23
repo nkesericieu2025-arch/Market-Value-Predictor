@@ -1,0 +1,13 @@
+model,starting_value,MAE,RMSE,R2,hyperparameters
+Median baseline,False,13.7133,19.9616,-0.0149,{}
+Carry-forward starting value,True,5.3219,8.1748,0.8298,{}
+Mean growth baseline,True,7.8497,11.4427,0.6665,{}
+Median growth baseline,True,5.3219,8.1748,0.8298,{}
+Linear regression,False,9.6492,12.3489,0.6116,{}
+Ridge,False,9.4475,12.3296,0.6128,{'alpha': 10}
+Random forest,False,8.9049,12.229,0.6191,"{'max_features': 0.5, 'min_samples_leaf': 1}"
+Gradient boosting,False,8.2421,11.5141,0.6623,"{'max_iter': 150, 'learning_rate': 0.08, 'max_leaf_nodes': 15, 'min_samples_leaf': 10}"
+Linear regression,True,4.5189,6.204,0.902,{}
+Ridge,True,4.4622,6.3129,0.8985,{'alpha': 30}
+Random forest,True,4.4207,6.539,0.8911,"{'max_features': 1.0, 'min_samples_leaf': 1}"
+Gradient boosting,True,4.1182,6.1759,0.9029,"{'max_iter': 300, 'learning_rate': 0.03, 'max_leaf_nodes': 7, 'min_samples_leaf': 10}"
